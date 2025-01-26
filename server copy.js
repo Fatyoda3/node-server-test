@@ -1,8 +1,8 @@
-import http from "http";
+import http from 'http';
 import dotenv from "dotenv";
 import fs from "fs/promises";
-import path from "path";
-import url from "url";
+import path from 'path';
+import url from 'url';
 
 
 dotenv.config();
@@ -14,55 +14,44 @@ const __dirname = path.dirname(__filename);
 
 const log_file_path = path.join(__dirname, "logs", 'log.dat');
 
+console.log(log_file_path);
 const logger = (whereNow) => {
     fs.appendFile(log_file_path, `\naccessed the ${whereNow} \n`)
 }
 
 const SERVER = http.createServer(
     async (req, res) => {
-
-
+        // fs.appendFile(log_file_path, `\nserver booted at ${(new Date()).getTime()}\n`);
         try {
-            
-            fs.appendFile(log_file_path, JSON.stringify(req.headers));
-
-            let singleUser;
+            fs.appendFile(log_file_path, JSON.stringify(req.headers))
             if (req.method === "GET") {
 
                 let filepath;
-                let id = '';
-                filepath = path.join(__dirname, "public", "data.json");
 
-                if (req.url === '/api/') {
-                    // logger(req.url);
+                if (req.url === '/') {
                     logger(`${req.url.host}`);
 
-
-
+                    filepath = path.join(__dirname, "public", "index.html");
                 }
-
-                let data = await fs.readFile(filepath);
-
-                if (req.url.match(/\/api\/users\/([0-9]+)/) || req.url.match(/\/api\/users\/([a-z]+)/)) {
-
+                else if (req.url === '/about') {
+                    // fs.writeFile(log_file_path, "accessed the about ")
                     logger(req.url);
-                    id = req.url.split('/')[3];
 
-                    singleUser = (JSON.parse(data))[id];
-
-                    // console.log(JSON.stringify(singleUser))
+                    console.log('second');
+                    filepath = path.join(__dirname, "public", "about.html");
+                }
+                else {
+                    console.log("Handle 404 cases");
+                    filepath = path.join(__dirname, "public", "404.html");
+                    res.statusCode = 404;
                 }
 
 
+                const data = await fs.readFile(filepath);
 
+                res.setHeader("Content-Type", "text/html");
 
-                res.setHeader("Content-Type", "Application/JSON");
-
-                if (!id)
-                    res.write(data.toString());
-                else
-                    res.write(JSON.stringify(singleUser));
-
+                res.write(data);
                 res.end();
             } else {
                 res.statusCode = 405;
